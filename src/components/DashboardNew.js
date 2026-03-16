@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SeverityBadge from './SeverityBadge';
 import Sparkline from './Sparkline';
 import Signals from './Signals';
 import RiskCheck from './RiskCheck';
 import Analytics from './Analytics';
 import Alerts from './Alerts';
-import { SAMPLE_ALERTS, INDEX_DATA, COLORS, FONTS } from '../constants';
+import CorridorPage from './CorridorPage';
+import WorldTradeMap from './WorldTradeMap';
+import Settings from './Settings';
+import { COLORS, FONTS } from '../constants';
 import { getChangeColor, getChangeIcon } from '../utils';
+import { supabase } from '../supabaseClient';
+import { useAlerts, useIndexData } from '../hooks';
 
 function DashboardNew({ onBackToLanding, userData }) {
   const [activeModule, setActiveModule] = useState('dashboard');
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [filterSeverity, setFilterSeverity] = useState('all');
+  const [corridorView, setCorridorView] = useState(null);
+  
+  // Fetch data from database
+  const { alerts, loading: alertsLoading } = useAlerts(4);
+  const { indexData, loading: indexLoading } = useIndexData();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '◆' },
@@ -25,9 +35,13 @@ function DashboardNew({ onBackToLanding, userData }) {
     { id: 'settings', label: 'Settings', icon: '⚙' },
   ];
 
-  const filtered = SAMPLE_ALERTS.filter(a => filterSeverity === 'all' || a.severity === filterSeverity);
+  const filtered = alerts.filter(a => filterSeverity === 'all' || a.severity === filterSeverity);
 
   const renderContent = () => {
+    if (corridorView) {
+      return <CorridorPage corridorId={corridorView} onBack={() => setCorridorView(null)} />;
+    }
+    
     switch(activeModule) {
       case 'signals': return <Signals />;
       case 'riskcheck': return <RiskCheck />;
@@ -36,7 +50,7 @@ function DashboardNew({ onBackToLanding, userData }) {
       case 'briefs': return <ComingSoon title="Briefs" desc="Weekly intelligence briefings" />;
       case 'precedents': return <ComingSoon title="Precedents" desc="Historical trade case studies" />;
       case 'opscenter': return <ComingSoon title="Ops Center" desc="Operational command center" />;
-      case 'settings': return <ComingSoon title="Settings" desc="Account and preferences" />;
+      case 'settings': return <Settings userData={userData} />;
       default: return renderDashboard();
     }
   };
@@ -50,23 +64,30 @@ function DashboardNew({ onBackToLanding, userData }) {
         <p style={{ fontSize: 15, color: '#8a887f' }}>Here's what's happening in the UK-India trade corridor</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 32 }}>
-        {Object.values(INDEX_DATA).map(idx => (
-          <div key={idx.abbrev} style={{ background: 'linear-gradient(135deg, #0e1014 0%, #0f101a 100%)', border: '1px solid #c8a93220', borderRadius: 8, padding: 28, transition: 'all 0.3s', cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#c8a93240'; e.currentTarget.style.transform = 'translateY(-4px)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#c8a93220'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: '#666', letterSpacing: '0.08em', marginBottom: 6, fontWeight: 600 }}>{idx.abbrev}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#b0ae9f' }}>{idx.name}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 36, fontWeight: 800, fontFamily: FONTS.mono, color: '#f0ede6' }}>{idx.value}</div>
-                <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: getChangeColor(idx.change), fontWeight: 700, marginTop: 4 }}>{getChangeIcon(idx.change)} {Math.abs(idx.change).toFixed(1)}</div>
-              </div>
-            </div>
-            <Sparkline data={idx.history} color={getChangeColor(idx.change)} width="100%" height={40} />
-          </div>
-        ))}
+      {/* World Trade Map */}
+      <div style={{ marginBottom: 32 }}>
+        <WorldTradeMap onCorridorClick={(corridorId) => setCorridorView(corridorId)} />
       </div>
+
+      {!indexLoading && Object.keys(indexData).length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 32 }}>
+          {Object.values(indexData).map(idx => (
+            <div key={idx.abbrev} style={{ background: 'linear-gradient(135deg, #0e1014 0%, #0f101a 100%)', border: '1px solid #c8a93220', borderRadius: 8, padding: 28, transition: 'all 0.3s', cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#c8a93240'; e.currentTarget.style.transform = 'translateY(-4px)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#c8a93220'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: '#666', letterSpacing: '0.08em', marginBottom: 6, fontWeight: 600 }}>{idx.abbrev}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#b0ae9f' }}>{idx.name}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 36, fontWeight: 800, fontFamily: FONTS.mono, color: '#f0ede6' }}>{idx.value.toFixed(1)}</div>
+                  <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: getChangeColor(idx.change), fontWeight: 700, marginTop: 4 }}>{getChangeIcon(idx.change)} {Math.abs(idx.change).toFixed(1)}</div>
+                </div>
+              </div>
+              {idx.history.length > 0 && <Sparkline data={idx.history} color={getChangeColor(idx.change)} width="100%" height={40} />}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: '#f0ede6' }}>Recent Alerts</h2>
@@ -80,29 +101,35 @@ function DashboardNew({ onBackToLanding, userData }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {filtered.slice(0, 4).map(alert => (
-          <div key={alert.id} onClick={() => setSelectedAlert(selectedAlert?.id === alert.id ? null : alert)} style={{ background: selectedAlert?.id === alert.id ? '#12131a' : '#0a0b0e', border: `1px solid ${selectedAlert?.id === alert.id ? '#c8a93240' : '#1a1c20'}`, borderRadius: 8, padding: '20px 24px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { if (selectedAlert?.id !== alert.id) e.currentTarget.style.borderColor = '#c8a93220'; }} onMouseLeave={(e) => { if (selectedAlert?.id !== alert.id) e.currentTarget.style.borderColor = '#1a1c20'; }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <SeverityBadge severity={alert.severity} />
-                <span style={{ fontSize: 12, fontFamily: FONTS.mono, color: '#666', background: '#ffffff08', padding: '4px 12px', borderRadius: 3, fontWeight: 700 }}>{alert.category}</span>
-              </div>
-              <span style={{ fontSize: 13, fontFamily: FONTS.mono, color: '#666', fontWeight: 700 }}>{alert.date}</span>
-            </div>
-            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#f5f3ee', marginBottom: 10, lineHeight: 1.4 }}>{alert.title}</h3>
-            <p style={{ fontSize: 15, color: '#b0ae9f', lineHeight: 1.6 }}>{alert.summary}</p>
-            {selectedAlert?.id === alert.id && (
-              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #1a1c20' }}>
-                <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #c8a93208 0%, #c8a93205 100%)', border: '1px solid #c8a93230', borderRadius: 6 }}>
-                  <div style={{ fontSize: 11, fontFamily: FONTS.mono, color: COLORS.primary, marginBottom: 8, fontWeight: 700 }}>ASSESSMENT</div>
-                  <p style={{ fontSize: 13, color: '#b0ae9f', lineHeight: 1.7 }}>
-                    {alert.severity === 'critical' ? 'Immediate action required. Review operations within 5 business days.' : 'Monitor closely and factor into planning.'}
-                  </p>
+        {alertsLoading ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>Loading alerts...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>No alerts found</div>
+        ) : (
+          filtered.map(alert => (
+            <div key={alert.id} onClick={() => setSelectedAlert(selectedAlert?.id === alert.id ? null : alert)} style={{ background: selectedAlert?.id === alert.id ? '#12131a' : '#0a0b0e', border: `1px solid ${selectedAlert?.id === alert.id ? '#c8a93240' : '#1a1c20'}`, borderRadius: 8, padding: '20px 24px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { if (selectedAlert?.id !== alert.id) e.currentTarget.style.borderColor = '#c8a93220'; }} onMouseLeave={(e) => { if (selectedAlert?.id !== alert.id) e.currentTarget.style.borderColor = '#1a1c20'; }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <SeverityBadge severity={alert.severity} />
+                  <span style={{ fontSize: 12, fontFamily: FONTS.mono, color: '#666', background: '#ffffff08', padding: '4px 12px', borderRadius: 3, fontWeight: 700 }}>{alert.category}</span>
                 </div>
+                <span style={{ fontSize: 13, fontFamily: FONTS.mono, color: '#666', fontWeight: 700 }}>{new Date(alert.date).toLocaleDateString()}</span>
               </div>
-            )}
-          </div>
-        ))}
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: '#f5f3ee', marginBottom: 10, lineHeight: 1.4 }}>{alert.title}</h3>
+              <p style={{ fontSize: 15, color: '#b0ae9f', lineHeight: 1.6 }}>{alert.summary}</p>
+              {selectedAlert?.id === alert.id && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #1a1c20' }}>
+                  <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #c8a93208 0%, #c8a93205 100%)', border: '1px solid #c8a93230', borderRadius: 6 }}>
+                    <div style={{ fontSize: 11, fontFamily: FONTS.mono, color: COLORS.primary, marginBottom: 8, fontWeight: 700 }}>ASSESSMENT</div>
+                    <p style={{ fontSize: 13, color: '#b0ae9f', lineHeight: 1.7 }}>
+                      {alert.severity === 'critical' ? 'Immediate action required. Review operations within 5 business days.' : 'Monitor closely and factor into planning.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

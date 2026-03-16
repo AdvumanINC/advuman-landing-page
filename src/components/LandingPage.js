@@ -4,11 +4,15 @@ import Sparkline from './Sparkline';
 import SignupModal from './SignupModal';
 import LoginModal from './LoginModal';
 import ParticleGrid from './ParticleGrid';
-import { SAMPLE_ALERTS, INDEX_DATA, FONTS } from '../constants';
+import { FONTS } from '../constants';
+import { useAlerts, useIndexData } from '../hooks';
 
-function LandingPage({ onEnterDashboard }) {
+function LandingPage({ onShowDemo }) {
   const [showSignup, setShowSignup] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  
+  const { alerts } = useAlerts(4);
+  const { indexData } = useIndexData();
 
   return (
     <div style={{ background: "#07080a", minHeight: "100vh", color: "#e8e6e1", position: "relative" }}>
@@ -39,18 +43,18 @@ function LandingPage({ onEnterDashboard }) {
         </p>
         <div style={{ display: "flex", gap: 12, maxWidth: 480, margin: "0 auto 32px", justifyContent: "center" }}>
           <button onClick={() => setShowSignup(true)} style={{ padding: "14px 32px", background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", color: "#07080a", border: "none", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(200,169,50,0.2)" }} onMouseEnter={(e) => { e.target.style.boxShadow = "0 6px 20px rgba(200,169,50,0.35)"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.boxShadow = "0 4px 12px rgba(200,169,50,0.2)"; e.target.style.transform = "translateY(0)"; }}>Start Free Trial</button>
-          <button onClick={onEnterDashboard} style={{ padding: "14px 32px", background: "#0e1014", color: "#c8a932", border: "1px solid #c8a93240", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }} onMouseEnter={(e) => { e.target.style.borderColor = "#c8a93260"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.borderColor = "#c8a93240"; e.target.style.transform = "translateY(0)"; }}>See Live Demo</button>
+          <button onClick={onShowDemo} style={{ padding: "14px 32px", background: "#0e1014", color: "#c8a932", border: "1px solid #c8a93240", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }} onMouseEnter={(e) => { e.target.style.borderColor = "#c8a93260"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.borderColor = "#c8a93240"; e.target.style.transform = "translateY(0)"; }}>See Live Demo</button>
         </div>
         <p style={{ fontSize: 13, color: "#555", marginTop: 24 }}>14-day free trial · No credit card required</p>
       </section>
 
       <section style={{ borderTop: "1px solid #1a1c20", borderBottom: "1px solid #1a1c20", overflow: "hidden", padding: "32px 0", background: "#0a0b0e", position: "relative" }}>
         <div style={{ display: "flex", gap: 20, padding: "0 40px", animation: "scroll 40s linear infinite" }}>
-          {[...SAMPLE_ALERTS.slice(0, 4), ...SAMPLE_ALERTS.slice(0, 4)].map((a, i) => (
+          {alerts.length > 0 && [...alerts, ...alerts].map((a, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "20px 24px", background: "#0e1014", border: "1px solid #1a1c20", borderRadius: 8, minWidth: 400, maxWidth: 400, flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
                 <SeverityBadge severity={a.severity} />
-                <span style={{ fontSize: 13, color: "#888", fontFamily: FONTS.mono, fontWeight: 700 }}>{a.date}</span>
+                <span style={{ fontSize: 13, color: "#888", fontFamily: FONTS.mono, fontWeight: 700 }}>{new Date(a.date).toLocaleDateString()}</span>
               </div>
               <h4 style={{ fontSize: 17, color: "#f0ede6", fontWeight: 700, lineHeight: 1.4, marginBottom: 8 }}>{a.title}</h4>
               <p style={{ fontSize: 15, color: "#a8a69d", lineHeight: 1.6, fontWeight: 500 }}>{a.summary.substring(0, 120)}...</p>
@@ -87,7 +91,7 @@ function LandingPage({ onEnterDashboard }) {
           <h2 style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", letterSpacing: "0.12em", marginBottom: 16, fontWeight: 700, textAlign: "center", textTransform: "uppercase" }}>PROPRIETARY INDEXES</h2>
           <h3 style={{ fontSize: 36, fontWeight: 700, textAlign: "center", marginBottom: 72, color: "#f0ede6" }}>Three numbers that tell you the real story</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32 }}>
-            {Object.values(INDEX_DATA).map((idx) => (
+            {Object.keys(indexData).length > 0 && Object.values(indexData).map((idx) => (
               <div key={idx.abbrev} style={{ background: "linear-gradient(135deg, #0e1014 0%, #0f101a 100%)", border: "1px solid #c8a93220", borderRadius: 8, padding: 36, transition: "all 0.3s", cursor: "pointer", position: "relative", overflow: "hidden" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#c8a93240"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(200,169,50,0.15)"; e.currentTarget.style.transform = "translateY(-4px)"; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#c8a93220"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}>
                 <div style={{ position: "absolute", top: 0, right: 0, width: 120, height: 120, background: "radial-gradient(circle, rgba(200,169,50,0.1) 0%, transparent 70%)", borderRadius: "50%" }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, position: "relative", zIndex: 1 }}>
@@ -160,8 +164,8 @@ function LandingPage({ onEnterDashboard }) {
         <p style={{ fontSize: 13, color: "#555" }}>Early warning intelligence for UK-India trade · © 2026</p>
       </footer>
       
-      {showSignup && <SignupModal onClose={() => setShowSignup(false)} onSignup={(data) => { setShowSignup(false); onEnterDashboard(data); }} />}
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={(data) => { setShowLogin(false); onEnterDashboard(data); }} />}
+      {showSignup && <SignupModal onClose={() => setShowSignup(false)} />}
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 }

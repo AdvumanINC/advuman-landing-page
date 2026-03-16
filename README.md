@@ -16,6 +16,7 @@ React application for UK-India trade intelligence platform with real-time alerts
 - **Frontend**: React
 - **Backend**: Supabase (PostgreSQL + Auth)
 - **Styling**: Inline styles with custom design system
+- **Data**: External webscraper integration
 
 ## Installation
 
@@ -36,17 +37,9 @@ REACT_APP_SUPABASE_URL=your_supabase_url
 REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-3. Create a `user_profiles` table in Supabase:
+3. Apply the database schema in Supabase SQL Editor:
 ```sql
-CREATE TABLE user_profiles (
-  user_id UUID REFERENCES auth.users PRIMARY KEY,
-  full_name TEXT,
-  company_name TEXT,
-  email TEXT,
-  trial_start_date TIMESTAMP,
-  trial_end_date TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+-- Run the contents of supabase-schema.sql in your Supabase SQL Editor
 ```
 
 ## Running the Application
@@ -62,6 +55,10 @@ The application will open at [http://localhost:3000](http://localhost:3000)
 ```bash
 npm run build
 ```
+
+## Data Integration
+
+This application expects data to be populated in Supabase tables by your external webscraper. The React app reads from these tables in real-time.
 
 ## Project Structure
 

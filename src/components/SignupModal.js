@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import LoginModal from './LoginModal';
 
-function SignupModal({ onClose, onSignup }) {
+function SignupModal({ onClose }) {
   const [formData, setFormData] = useState({
     companyName: '', fullName: '', email: '', password: ''
   });
@@ -200,7 +200,7 @@ function SignupModal({ onClose, onSignup }) {
       </div>
     </div>
     ) : null}
-    {showLogin && <LoginModal onClose={onClose} onLogin={onSignup} />}
+    {showLogin && <LoginModal onClose={onClose} />}
     </>
   );
 }

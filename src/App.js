@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import LandingPage from './components/LandingPage';
 import DashboardNew from './components/DashboardNew';
+import DemoView from './components/DemoView';
 
 function App() {
   const [view, setView] = useState("landing");
@@ -54,9 +55,12 @@ function App() {
     }
   };
   
-  const handleEnterDashboard = (data) => {
-    if (data) setUserData(data);
-    setView("dashboard");
+  const handleShowDemo = () => {
+    setView("demo");
+  };
+  
+  const handleBackToLanding = () => {
+    setView('landing');
   };
   
   const handleLogout = async () => {
@@ -65,8 +69,12 @@ function App() {
     setUserData(null);
   };
   
+  if (view === 'demo') {
+    return <DemoView onBack={handleBackToLanding} />;
+  }
+  
   return view === "landing"
-    ? <LandingPage onEnterDashboard={handleEnterDashboard} />
+    ? <LandingPage onShowDemo={handleShowDemo} />
     : <DashboardNew onBackToLanding={handleLogout} userData={userData} />;
 }
 
