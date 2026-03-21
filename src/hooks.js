@@ -65,7 +65,7 @@ export const useSignals = (limit = null) => {
     if (data) setSignals(data);
     setLoading(false);
   };
-
+//
   return { signals, loading };
 };
 
