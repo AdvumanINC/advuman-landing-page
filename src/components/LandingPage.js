@@ -8,7 +8,7 @@ import WorldTradeMap from './WorldTradeMap';
 import { FONTS } from '../constants';
 import { useAlerts, useIndexData } from '../hooks';
 
-function LandingPage({ onShowDemo, onTestDB }) {
+function LandingPage({ onShowDemo }) {
   const [showSignup, setShowSignup] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   
@@ -45,9 +45,6 @@ function LandingPage({ onShowDemo, onTestDB }) {
         <div style={{ display: "flex", gap: 12, maxWidth: 480, margin: "0 auto 32px", justifyContent: "center" }}>
           <button onClick={() => setShowSignup(true)} style={{ padding: "14px 32px", background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", color: "#07080a", border: "none", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(200,169,50,0.2)" }} onMouseEnter={(e) => { e.target.style.boxShadow = "0 6px 20px rgba(200,169,50,0.35)"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.boxShadow = "0 4px 12px rgba(200,169,50,0.2)"; e.target.style.transform = "translateY(0)"; }}>Start Free Trial</button>
           <button onClick={onShowDemo} style={{ padding: "14px 32px", background: "#0e1014", color: "#c8a932", border: "1px solid #c8a93240", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }} onMouseEnter={(e) => { e.target.style.borderColor = "#c8a93260"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.borderColor = "#c8a93240"; e.target.style.transform = "translateY(0)"; }}>See Live Demo</button>
-          {onTestDB && (
-            <button onClick={onTestDB} style={{ padding: "14px 32px", background: "#0e1014", color: "#4ddbaa", border: "1px solid #4ddbaa40", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }} onMouseEnter={(e) => { e.target.style.borderColor = "#4ddbaa60"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.borderColor = "#4ddbaa40"; e.target.style.transform = "translateY(0)"; }}>Test DB</button>
-          )}
         </div>
         <p style={{ fontSize: 13, color: "#555", marginTop: 24 }}>14-day free trial · No credit card required</p>
       </section>
@@ -94,7 +91,7 @@ function LandingPage({ onShowDemo, onTestDB }) {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <h2 style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", letterSpacing: "0.12em", marginBottom: 16, fontWeight: 700, textAlign: "center", textTransform: "uppercase" }}>GLOBAL COVERAGE</h2>
           <h3 style={{ fontSize: 36, fontWeight: 700, textAlign: "center", marginBottom: 24, color: "#f0ede6" }}>Monitor trade corridors worldwide</h3>
-          <p style={{ fontSize: 15, color: "#8a887f", textAlign: "center", marginBottom: 48, maxWidth: 700, margin: "0 auto 48px" }}>Real-time risk assessment across multiple trade routes. Track regulatory changes, logistics strain, and compliance pressure for every corridor.</p>
+          <p style={{ fontSize: 15, color: "#8a887f", textAlign: "center", marginBottom: 48, maxWidth: 700, margin: "0 auto 48px" }}>Real-time risk assessment across multiple trade routes. Track regulatory changes, logistics strain, and cost pressure for every corridor.</p>
           <WorldTradeMap onCorridorClick={() => {}} />
         </div>
       </section>

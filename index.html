@@ -1,469 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADVUMAN — UK-India Trade Intelligence</title>
-    <link rel="icon" type="image/jpeg" href="logo.jpeg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { font-family: 'DM Sans', -apple-system, sans-serif; background: #07080a; color: #e8e6e1; line-height: 1.6; }
-        ::selection { background: #c8a93260; color: #f0ede6; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #07080a; }
-        ::-webkit-scrollbar-thumb { background: #2a2c34; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3a3c44; }
-        select option { background: #0e1014; color: #e8e6e1; }
-        #root { min-height: 100vh; }
-        
-        /* Smooth transitions */
-        * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
-        button, select { cursor: pointer; }
-        
-        /* Focus states for accessibility */
-        button:focus, select:focus, input:focus { outline: 2px solid #c8a932; outline-offset: 2px; }
-        
-        /* Scrollbar styling for firefox */
-        * { scrollbar-color: #2a2c34 #07080a; scrollbar-width: thin; }
-    </style>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADVUMAN</title>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { margin:0; font-family: Arial; background:#07080a; color:#fff; }
+  </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-const { useState, useEffect, useRef } = React;
+<div id="root"></div>
 
-// Constants
-const COLORS = {
-  primary: "#c8a932",
-  primaryLight: "#d4b744",
-  bg: "#07080a",
-  positive: "#4ddbaa",
-  negative: "#ff6b6b",
-  critical: "#ff3b30",
-  high: "#ff9500",
-  medium: "#ffc700",
-  low: "#00d084"
-};
-
-const GRADIENTS = {
-  primary: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryLight} 100%)`,
-  card: "linear-gradient(135deg, #0e1014 0%, #0f101a 100%)",
-  assessment: "linear-gradient(135deg, #c8a93208 0%, #c8a93205 100%)"
-};
-
-const FONTS = {
-  mono: "'JetBrains Mono', monospace"
-};
-
-// Helper functions
-const getRiskColor = (risk) => COLORS[risk] || COLORS.low;
-const getChangeColor = (change) => change > 0 ? COLORS.negative : COLORS.positive;
-const getChangeIcon = (change) => change > 0 ? "▲" : "▼";
-
-const SAMPLE_ALERTS = [
-  {
-    id: 1, severity: "critical",
-    title: "India DPIIT Issues New FDI Policy Circular",
-    summary: "Department for Promotion of Industry and Internal Trade released revised FDI guidelines affecting e-commerce, defence, and insurance sectors. UK firms with Indian JVs should review compliance within 90-day window.",
-    source: "DPIIT Gazette Notification", date: "2026-02-11",
-    category: "Regulatory", corridor: "UK-India",
-    tags: ["FDI", "compliance", "e-commerce"],
-  },
-  {
-    id: 2, severity: "high",
-    title: "CBIC Revises Anti-Dumping Duties on UK Steel Imports",
-    summary: "Central Board of Indirect Taxes and Customs has initiated a sunset review of anti-dumping duties on certain steel products imported from the UK. Provisional duty rate increased from 12.4% to 18.7%.",
-    source: "CBIC Notification No. 04/2026", date: "2026-02-10",
-    category: "Tariff", corridor: "UK-India",
-    tags: ["anti-dumping", "steel", "tariffs"],
-  },
-  {
-    id: 3, severity: "medium",
-    title: "UK-India FTA Round 16 Concluded — Services Chapter Stalled",
-    summary: "16th round of UK-India FTA negotiations concluded in New Delhi. Progress on goods market access but services chapter remains contentious. Mode 4 (movement of natural persons) is the key sticking point.",
-    source: "UK DBT Press Release / MEA Statement", date: "2026-02-08",
-    category: "Trade Agreement", corridor: "UK-India",
-    tags: ["FTA", "services", "Mode 4"],
-  },
-  {
-    id: 4, severity: "medium",
-    title: "RBI Tightens External Commercial Borrowing Norms",
-    summary: "Reserve Bank of India revised ECB framework. All-in-cost ceiling reduced by 50bps. UK lenders providing trade finance to Indian importers should review pricing structures.",
-    source: "RBI/2026-27/14", date: "2026-02-07",
-    category: "Financial", corridor: "UK-India",
-    tags: ["ECB", "trade finance", "RBI"],
-  },
-  {
-    id: 5, severity: "low",
-    title: "BIS Updates Quality Control Orders for Electronics",
-    summary: "Bureau of Indian Standards expanded mandatory certification list for electronic components. 47 new product categories added. UK electronics exporters have 180-day compliance window.",
-    source: "BIS QCO Notification", date: "2026-02-05",
-    category: "Standards", corridor: "UK-India",
-    tags: ["BIS", "electronics", "certification"],
-  },
-  {
-    id: 6, severity: "high",
-    title: "India Raises Customs Duty on Medical Devices",
-    summary: "Union Budget 2026-27 increased basic customs duty on imported medical devices from 7.5% to 15%. Affects UK medtech exporters including diagnostics, implants, and surgical instruments.",
-    source: "Finance Bill 2026", date: "2026-02-04",
-    category: "Tariff", corridor: "UK-India",
-    tags: ["medical devices", "customs duty", "budget"],
-  },
-];
-
-const INDEX_DATA = {
-  rpi: { name: "Regulatory Pressure Index", abbrev: "RPI", value: 7.2, change: +0.8, history: [5.1,5.4,5.8,6.0,6.1,6.4,6.2,6.5,6.8,7.0,6.9,7.2], description: "Measures regulatory burden and policy volatility affecting cross-border trade" },
-  lsi: { name: "Logistics Strain Index", abbrev: "LSI", value: 5.8, change: -0.3, history: [6.8,6.5,6.2,6.0,5.9,6.1,6.3,6.1,5.9,5.7,5.9,5.8], description: "Tracks shipping costs, port congestion, and supply chain disruption risk" },
-  cpi: { name: "Compliance Pressure Index", abbrev: "CPI", value: 6.5, change: +1.2, history: [4.2,4.5,4.8,5.0,5.2,5.1,5.5,5.8,6.0,6.1,6.3,6.5], description: "Quantifies standards, certification, and documentation requirements" },
-};
-
-const SECTORS = [
-  { name: "Pharmaceuticals", alerts: 12, risk: "high" },
-  { name: "IT Services", alerts: 8, risk: "medium" },
-  { name: "Textiles & Apparel", alerts: 6, risk: "medium" },
-  { name: "Auto Components", alerts: 9, risk: "high" },
-  { name: "Food & Agri", alerts: 4, risk: "low" },
-  { name: "Medical Devices", alerts: 11, risk: "critical" },
-  { name: "Electronics", alerts: 7, risk: "medium" },
-  { name: "Steel & Metals", alerts: 10, risk: "high" },
-];
-
-function Sparkline({ data, color, width = 120, height = 32 }) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-  const points = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * (typeof width === 'string' ? 240 : width);
-    const y = height - ((v - min) / range) * (height - 4) - 2;
-    return `${x},${y}`;
-  }).join(" ");
-  return (
-    <svg width={typeof width === 'string' ? '100%' : width} height={height} style={{ display: "block", overflow: "visible" }}>
-      <defs>
-        <linearGradient id={`gradient-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.05" />
-        </linearGradient>
-      </defs>
-      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-      <polyline points={points + ` ${(typeof width === 'string' ? 240 : width)},${height} 0,${height}`} fill={`url(#gradient-${color})`} opacity="0.3" />
-    </svg>
-  );
-}
+<script type="text/babel">
+const { useState, useEffect } = React;
 
 function SeverityBadge({ severity }) {
   const colors = {
-    critical: { bg: "#ff3b3015", border: "#ff3b30", text: "#ff6b6b" },
-    high: { bg: "#ff950015", border: "#ff9500", text: "#ffb347" },
-    medium: { bg: "#ffc70015", border: "#ffc700", text: "#ffd84d" },
-    low: { bg: "#00d08415", border: "#00d084", text: "#4ddbaa" },
+    critical: "red",
+    high: "orange",
+    medium: "yellow",
+    low: "green"
   };
-  const c = colors[severity] || colors.medium;
-  return (
-    <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: "4px", fontSize: 11, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: c.text, background: c.bg, border: `1px solid ${c.border}40`, boxShadow: `0 0 8px ${c.border}15` }}>
-      {severity}
-    </span>
-  );
+  return <span style={{color:colors[severity]}}>{severity}</span>;
 }
 
-function LandingPage({ onEnterDashboard }) {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+function LandingPage({ onEnter }) {
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  async function fetchAlerts() {
+    const { data, error } = await supabase
+      .from("alerts")
+      .select("*")
+      .order("date", { ascending: false });
+
+    if (error) console.error(error);
+    else setAlerts(data);
+  }
 
   return (
-    <div style={{ background: "#07080a", minHeight: "100vh", color: "#e8e6e1" }}>
-      <nav style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "40px 48px 80px", position: "sticky", top: 0, background: "#07080a", zIndex: 100 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "80px", maxWidth: 1000, width: "100%", background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", padding: "16px 50px", borderRadius: "50px", boxShadow: "0 4px 20px rgba(200,169,50,0.15)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
-            <img src="logo.jpeg" alt="Advuman Logo" style={{ width: 32, height: 32, borderRadius: "8px", objectFit: "cover" }} />
-            <span style={{ fontWeight: 500, fontSize: 18, letterSpacing: "0.01em", color: "#07080a" }}>ADVUMAN</span>
-          </div>
-          <div style={{ display: "flex", gap: "50px", alignItems: "center", flex: 1, justifyContent: "center" }}>
-            <a href="#how" style={{ color: "#07080a", textDecoration: "none", fontSize: 14, fontWeight: 400, transition: "all 0.2s", opacity: 0.75 }} onMouseEnter={(e) => { e.target.style.opacity = "1"; }} onMouseLeave={(e) => { e.target.style.opacity = "0.75"; }}>How It Works</a>
-            <a href="#pricing" style={{ color: "#07080a", textDecoration: "none", fontSize: 14, fontWeight: 400, transition: "all 0.2s", opacity: 0.75 }} onMouseEnter={(e) => { e.target.style.opacity = "1"; }} onMouseLeave={(e) => { e.target.style.opacity = "0.75"; }}>Pricing</a>
-            <button onClick={onEnterDashboard} style={{ background: "#07080a", border: "none", color: "#c8a932", padding: "10px 24px", borderRadius: "24px", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.01em", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }} onMouseEnter={(e) => { e.target.style.boxShadow = "0 3px 12px rgba(0,0,0,0.25)"; }} onMouseLeave={(e) => { e.target.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; }}>DASHBOARD →</button>
-          </div>
-        </div>
-      </nav>
+    <div style={{padding:40}}>
+      <h1>ADVUMAN</h1>
+      <button onClick={onEnter}>Go Dashboard</button>
 
-      <section style={{ padding: "140px 40px 100px", maxWidth: 1000, margin: "0 auto", textAlign: "center", position: "relative" }}>
-        <div style={{ position: "absolute", top: -50, left: "50%", transform: "translateX(-50%)", width: 800, height: 500, background: "radial-gradient(ellipse, rgba(200,169,50,0.08) 0%, transparent 70%)", pointerEvents: "none", borderRadius: "50%" }} />
-        <div style={{ display: "inline-block", padding: "6px 18px", background: "rgba(200,169,50,0.15)", border: "1px solid rgba(200,169,50,0.35)", borderRadius: "4px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", letterSpacing: "0.12em", marginBottom: 32, fontWeight: 600 }}>UK ↔ INDIA TRADE INTELLIGENCE</div>
-        <h1 style={{ fontSize: "clamp(40px, 6vw, 64px)", fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.03em", marginBottom: 28, color: "#f0ede6" }}>
-          Know what's changing<br /><span style={{ background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>before it hits your P&L</span>
-        </h1>
-        <p style={{ fontSize: 18, color: "#8a887f", maxWidth: 620, margin: "0 auto 52px", lineHeight: 1.8 }}>
-          Early warning intelligence for UK businesses trading with India. Regulatory shifts, tariff changes, and compliance updates — delivered before your competitors know they exist.
-        </p>
-        {!submitted ? (
-          <div style={{ display: "flex", gap: 8, maxWidth: 480, margin: "0 auto 32px", justifyContent: "center" }}>
-            <input type="email" placeholder="your@company.com" value={email} onChange={(e) => setEmail(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && email && setSubmitted(true)} style={{ flex: 1, padding: "14px 18px", background: "#12131a", border: "1px solid #2a2c34", borderRadius: 4, color: "#e8e6e1", fontSize: 14, outline: "none", fontFamily: "inherit", transition: "all 0.2s" }} onFocus={(e) => { e.target.style.borderColor = "#c8a932"; e.target.style.boxShadow = "0 0 0 3px rgba(200,169,50,0.1)"; }} onBlur={(e) => { e.target.style.borderColor = "#2a2c34"; e.target.style.boxShadow = "none"; }} />
-            <button onClick={() => email && setSubmitted(true)} style={{ padding: "14px 32px", background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", color: "#07080a", border: "none", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(200,169,50,0.2)" }} onMouseEnter={(e) => { e.target.style.boxShadow = "0 6px 20px rgba(200,169,50,0.35)"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.boxShadow = "0 4px 12px rgba(200,169,50,0.2)"; e.target.style.transform = "translateY(0)"; }}>Get Early Access</button>
-          </div>
-        ) : (
-          <div style={{ padding: "16px 28px", background: "rgba(0,208,132,0.1)", border: "1px solid rgba(0,208,132,0.3)", borderRadius: 4, color: "#4ddbaa", fontSize: 14, fontFamily: "'JetBrains Mono', monospace", maxWidth: 480, margin: "0 auto", display: "inline-block" }}>✓ You're on the list. We'll be in touch within 48 hours.</div>
-        )}
-        <p style={{ fontSize: 13, color: "#555", marginTop: 24 }}>£150/month · Cancel anytime · First week free</p>
-      </section>
-
-      <section style={{ borderTop: "1px solid #1a1c20", borderBottom: "1px solid #1a1c20", overflow: "hidden", padding: "32px 0", background: "#0a0b0e" }}>
-        <div style={{ display: "flex", gap: 20, padding: "0 40px", animation: "scroll 40s linear infinite" }}>
-          {[...SAMPLE_ALERTS.slice(0, 4), ...SAMPLE_ALERTS.slice(0, 4)].map((a, i) => (
-            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "20px 24px", background: "#0e1014", border: "1px solid #1a1c20", borderRadius: 8, minWidth: 400, maxWidth: 400, flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-                <SeverityBadge severity={a.severity} />
-                <span style={{ fontSize: 13, color: "#888", fontFamily: FONTS.mono, fontWeight: 700 }}>{a.date}</span>
-              </div>
-              <h4 style={{ fontSize: 17, color: "#f0ede6", fontWeight: 700, lineHeight: 1.4, marginBottom: 8 }}>{a.title}</h4>
-              <p style={{ fontSize: 15, color: "#a8a69d", lineHeight: 1.6, fontWeight: 500 }}>{a.summary.substring(0, 120)}...</p>
-            </div>
-          ))}
+      <h2>Latest Alerts</h2>
+      {alerts.slice(0,4).map(a => (
+        <div key={a.id} style={{marginBottom:10}}>
+          <SeverityBadge severity={a.severity} />
+          <div>{a.title}</div>
         </div>
-        <style>{`
-          @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}</style>
-      </section>
-
-      <section id="how" style={{ padding: "120px 40px", maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 100, alignItems: "start" }}>
-          <div>
-            <h2 style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#ff6b6b", letterSpacing: "0.12em", marginBottom: 24, fontWeight: 700, textTransform: "uppercase" }}>THE PROBLEM</h2>
-            <h3 style={{ fontSize: 32, fontWeight: 700, lineHeight: 1.25, marginBottom: 24, color: "#f0ede6" }}>You find out about trade barriers after they've already cost you money.</h3>
-            <p style={{ color: "#8a887f", lineHeight: 1.9, fontSize: 16 }}>India's regulatory landscape moves fast. CBIC notifications, DGFT circulars, BIS quality orders, RBI policy changes — scattered across dozens of government sources in multiple languages. By the time it reaches industry news, your shipment is already stuck at customs or your pricing is wrong.</p>
-          </div>
-          <div>
-            <h2 style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#4ddbaa", letterSpacing: "0.12em", marginBottom: 24, fontWeight: 700, textTransform: "uppercase" }}>THE SOLUTION</h2>
-            <h3 style={{ fontSize: 32, fontWeight: 700, lineHeight: 1.25, marginBottom: 24, color: "#f0ede6" }}>Intelligence, not information. Decisions, not data dumps.</h3>
-            <p style={{ color: "#8a887f", lineHeight: 1.9, fontSize: 16, marginBottom: 32 }}>Advuman monitors 25+ official sources across the UK-India corridor. We filter the noise, verify the signal, and deliver actionable intelligence — with what it means for your specific business and what you should do about it.</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {["Weekly intelligence briefings", "Real-time critical alerts via WhatsApp", "Sector-specific risk indexes", "Plain-English regulatory translations"].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 8, height: 8, background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", borderRadius: "50%", flexShrink: 0, boxShadow: "0 0 8px rgba(200,169,50,0.3)" }} />
-                  <span style={{ fontSize: 15, color: "#b0ae9f", fontWeight: 500 }}>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section style={{ padding: "120px 40px", borderTop: "1px solid #1a1c20" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", letterSpacing: "0.12em", marginBottom: 16, fontWeight: 700, textAlign: "center", textTransform: "uppercase" }}>PROPRIETARY INDEXES</h2>
-          <h3 style={{ fontSize: 36, fontWeight: 700, textAlign: "center", marginBottom: 72, color: "#f0ede6" }}>Three numbers that tell you the real story</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32 }}>
-            {Object.values(INDEX_DATA).map((idx) => (
-              <div key={idx.abbrev} style={{ background: "linear-gradient(135deg, #0e1014 0%, #0f101a 100%)", border: "1px solid #c8a93220", borderRadius: 8, padding: 36, transition: "all 0.3s", cursor: "pointer", position: "relative", overflow: "hidden" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#c8a93240"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(200,169,50,0.15)"; e.currentTarget.style.transform = "translateY(-4px)"; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#c8a93220"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}>
-                <div style={{ position: "absolute", top: 0, right: 0, width: 120, height: 120, background: "radial-gradient(circle, rgba(200,169,50,0.1) 0%, transparent 70%)", borderRadius: "50%" }} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, position: "relative", zIndex: 1 }}>
-                  <div>
-                    <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "#666", letterSpacing: "0.08em", marginBottom: 6, fontWeight: 600 }}>{idx.abbrev}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#b0ae9f" }}>{idx.name}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 40, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: "#f0ede6" }}>{idx.value}</div>
-                    <div style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: idx.change > 0 ? "#ff6b6b" : "#4ddbaa", fontWeight: 700, marginTop: 4 }}>{idx.change > 0 ? "▲" : "▼"} {Math.abs(idx.change).toFixed(1)}</div>
-                  </div>
-                </div>
-                <Sparkline data={idx.history} color={idx.change > 0 ? "#ff6b6b" : "#4ddbaa"} width="100%" height={50} />
-                <p style={{ fontSize: 13, color: "#666", marginTop: 20, lineHeight: 1.6 }}>{idx.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing" style={{ padding: "120px 40px", borderTop: "1px solid #1a1c20" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", letterSpacing: "0.12em", marginBottom: 16, fontWeight: 700, textTransform: "uppercase" }}>PRICING</h2>
-          <h3 style={{ fontSize: 36, fontWeight: 700, marginBottom: 20, color: "#f0ede6" }}>Less than one customs penalty.</h3>
-          <p style={{ color: "#8a887f", marginBottom: 80, fontSize: 17, lineHeight: 1.8 }}>One missed CBIC notification can cost you thousands. Advuman costs less than a consultant lunch.</p>
-          <div style={{ background: "linear-gradient(135deg, #0e1014 0%, #12131a 100%)", border: "1px solid #c8a93230", borderRadius: 12, padding: 60, maxWidth: 500, margin: "0 auto", position: "relative", boxShadow: "0 20px 60px rgba(200,169,50,0.1)" }}>
-            <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%) translateY(-1px)", width: "80%", height: 2, background: "linear-gradient(90deg, transparent, #c8a932, transparent)" }} />
-            <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", letterSpacing: "0.1em", marginBottom: 12, fontWeight: 700, textTransform: "uppercase" }}>INTELLIGENCE SUBSCRIPTION</div>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4, marginBottom: 32 }}>
-              <span style={{ fontSize: 56, fontWeight: 800, color: "#f0ede6" }}>£150</span>
-              <span style={{ fontSize: 18, color: "#666" }}>/month</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 18, textAlign: "left", marginBottom: 40 }}>
-              {["Weekly UK-India intelligence briefings", "Real-time WhatsApp critical alerts", "RPI, LSI, CPI corridor indexes", "Sector-specific regulatory tracking", "Plain-English impact assessments", "Monthly strategic outlook report", "Direct analyst access (email)"].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <span style={{ color: "#c8a932", fontSize: 16, marginTop: -2, fontWeight: 800 }}>✓</span>
-                  <span style={{ fontSize: 15, color: "#b0ae9f" }}>{item}</span>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ width: "100%", padding: "16px 0", background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", color: "#07080a", border: "none", borderRadius: 6, fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(200,169,50,0.2)" }} onMouseEnter={(e) => { e.target.style.boxShadow = "0 6px 20px rgba(200,169,50,0.35)"; e.target.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.target.style.boxShadow = "0 4px 12px rgba(200,169,50,0.2)"; e.target.style.transform = "translateY(0)"; }}>Start 7-Day Free Trial</button>
-            <p style={{ fontSize: 12, color: "#555", marginTop: 14 }}>No card required · Cancel anytime · Pilot pricing</p>
-          </div>
-        </div>
-      </section>
-
-      <footer style={{ borderTop: "1px solid #1a1c20", padding: "48px 40px", textAlign: "center", background: "linear-gradient(180deg, rgba(7,8,10,0.5) 0%, #07080a 100%)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 24, height: 24, background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, color: "#07080a", fontFamily: "'JetBrains Mono', monospace" }}>A</div>
-          <span style={{ fontWeight: 700, fontSize: 14, color: "#b0ae9f" }}>ADVUMAN</span>
-        </div>
-        <p style={{ fontSize: 13, color: "#555" }}>Early warning intelligence for UK-India trade · © 2026</p>
-      </footer>
+      ))}
     </div>
   );
 }
 
-function Dashboard({ onBackToLanding }) {
-  const [selectedAlert, setSelectedAlert] = useState(null);
-  const [filterSeverity, setFilterSeverity] = useState("all");
-  const [filterCategory, setFilterCategory] = useState("all");
-  const [hoveredSector, setHoveredSector] = useState(null);
+function Dashboard({ onBack }) {
+  const [alerts, setAlerts] = useState([]);
+  const [indexes, setIndexes] = useState([]);
+  const [sectors, setSectors] = useState([]);
 
-  const filtered = SAMPLE_ALERTS.filter((a) => {
-    if (filterSeverity !== "all" && a.severity !== filterSeverity) return false;
-    if (filterCategory !== "all" && a.category !== filterCategory) return false;
+  const [filterSeverity, setFilterSeverity] = useState("all");
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  async function fetchAll() {
+    const { data: alertsData } = await supabase
+      .from("alerts")
+      .select("*")
+      .order("date", { ascending: false });
+
+    const { data: indexData } = await supabase
+      .from("indexes")
+      .select("*");
+
+    const { data: sectorData } = await supabase
+      .from("sectors")
+      .select("*");
+
+    setAlerts(alertsData || []);
+    setIndexes(indexData || []);
+    setSectors(sectorData || []);
+  }
+
+  const filtered = alerts.filter(a => {
+    if(filterSeverity !== "all" && a.severity !== filterSeverity) return false;
     return true;
   });
 
-  const categories = [...new Set(SAMPLE_ALERTS.map((a) => a.category))];
-
   return (
-    <div style={{ background: "#07080a", minHeight: "100vh", color: "#e8e6e1" }}>
-      <nav style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "20px 48px", background: "#07080a", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 1400, width: "100%", background: "linear-gradient(135deg, #c8a932 0%, #d4b744 100%)", padding: "12px 40px", borderRadius: "50px", boxShadow: "0 4px 20px rgba(200,169,50,0.15)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <button onClick={onBackToLanding} style={{ background: "#07080a", border: "none", color: "#c8a932", cursor: "pointer", fontSize: 13, padding: "8px 16px", borderRadius: "20px", transition: "all 0.2s", fontWeight: 600 }} onMouseEnter={(e) => { e.target.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)"; }} onMouseLeave={(e) => { e.target.style.boxShadow = "none"; }}>← Back</button>
-            <div style={{ width: 1, height: 20, background: "#07080a", opacity: 0.3 }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <img src="logo.jpeg" alt="Advuman Logo" style={{ width: 28, height: 28, borderRadius: "6px", objectFit: "cover" }} />
-              <span style={{ fontWeight: 600, fontSize: 16, color: "#07080a" }}>ADVUMAN</span>
-              <span style={{ fontSize: 11, color: "#07080a", fontFamily: "'JetBrains Mono', monospace", marginLeft: 6, fontWeight: 500, opacity: 0.7 }}>DASHBOARD</span>
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", background: "#07080a", borderRadius: "20px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#00d084", fontWeight: 600 }}>
-              <div style={{ width: 7, height: 7, background: "#00d084", borderRadius: "50%", boxShadow: "0 0 8px #00d084" }} />LIVE
-            </div>
-            <span style={{ fontSize: 12, color: "#07080a", fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, opacity: 0.7 }}>UK ↔ INDIA</span>
-          </div>
+    <div style={{padding:20}}>
+      <button onClick={onBack}>Back</button>
+
+      <h2>Indexes</h2>
+      {indexes.map(i => (
+        <div key={i.id}>{i.name}: {i.value}</div>
+      ))}
+
+      <h2>Sectors</h2>
+      {sectors.map(s => (
+        <div key={s.id}>{s.name} ({s.alerts})</div>
+      ))}
+
+      <h2>Alerts</h2>
+      <select onChange={e=>setFilterSeverity(e.target.value)}>
+        <option value="all">All</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+
+      {filtered.map(a => (
+        <div key={a.id} style={{border:"1px solid #333", margin:10, padding:10}}>
+          <SeverityBadge severity={a.severity} />
+          <h3>{a.title}</h3>
+          <p>{a.summary}</p>
         </div>
-      </nav>
-
-      <div style={{ display: "flex", minHeight: "calc(100vh - 56px)" }}>
-        <aside style={{ width: 280, borderRight: "1px solid #1a1c20", padding: "24px 18px", flexShrink: 0, overflowY: "auto", background: "linear-gradient(180deg, #07080a 0%, #0a0b0e 100%)" }}>
-          <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#555", letterSpacing: "0.12em", marginBottom: 20, fontWeight: 700, textTransform: "uppercase" }}>CORRIDOR INDEXES</div>
-          {Object.values(INDEX_DATA).map((idx) => (
-            <div key={idx.abbrev} style={{ background: "linear-gradient(135deg, #0e1014 0%, #0f101a 100%)", border: "1px solid #1a1c20", borderRadius: 5, padding: "14px 16px", marginBottom: 10, transition: "all 0.2s", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#c8a93240"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(200,169,50,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1c20"; e.currentTarget.style.boxShadow = "none"; }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, fontFamily: FONTS.mono, color: "#888", fontWeight: 700 }}>{idx.abbrev}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 22, fontWeight: 800, fontFamily: FONTS.mono, color: "#f0ede6" }}>{idx.value}</span>
-                  <span style={{ fontSize: 11, fontFamily: FONTS.mono, color: getChangeColor(idx.change), fontWeight: 700 }}>{getChangeIcon(idx.change)}{Math.abs(idx.change).toFixed(1)}</span>
-                </div>
-              </div>
-              <Sparkline data={idx.history} color={getChangeColor(idx.change)} width={240} height={32} />
-            </div>
-          ))}
-
-          <div style={{ fontSize: 12, fontFamily: FONTS.mono, color: "#777", letterSpacing: "0.12em", margin: "32px 0 20px", fontWeight: 700, textTransform: "uppercase" }}>SECTORS MONITORED</div>
-          {SECTORS.map((s) => {
-            const riskColor = getRiskColor(s.risk);
-            return (
-            <div key={s.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderRadius: 5, marginBottom: 6, fontSize: 14, color: "#a8a69d", cursor: "pointer", background: hoveredSector === s.name ? "#c8a93210" : "transparent" }} onMouseEnter={() => setHoveredSector(s.name)} onMouseLeave={() => setHoveredSector(null)}>
-              <span style={{ fontWeight: hoveredSector === s.name ? 600 : 500 }}>{s.name}</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontFamily: FONTS.mono, fontSize: 13, color: "#777", fontWeight: 700 }}>{s.alerts}</span>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: riskColor, boxShadow: `0 0 10px ${riskColor}40` }} />
-              </div>
-            </div>
-          )})}
-        </aside>
-
-        <main style={{ flex: 1, padding: "32px 40px", overflowY: "auto", background: "#08090b" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-            <div style={{ display: "flex", gap: 12 }}>
-              <select value={filterSeverity} onChange={(e) => setFilterSeverity(e.target.value)} style={{ background: "#0e1014", border: "1px solid #2a2c34", color: "#8a887f", padding: "8px 14px", borderRadius: 4, fontSize: 13, fontFamily: FONTS.mono, cursor: "pointer" }} onFocus={(e) => e.target.style.borderColor = COLORS.primary} onBlur={(e) => e.target.style.borderColor = "#2a2c34"}>
-                <option value="all">All Severity</option>
-                <option value="critical">Critical</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-              <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} style={{ background: "#0e1014", border: "1px solid #2a2c34", color: "#8a887f", padding: "8px 14px", borderRadius: 4, fontSize: 13, fontFamily: FONTS.mono, cursor: "pointer" }} onFocus={(e) => e.target.style.borderColor = COLORS.primary} onBlur={(e) => e.target.style.borderColor = "#2a2c34"}>
-                <option value="all">All Categories</option>
-                {categories.map((c) => (<option key={c} value={c}>{c}</option>))}
-              </select>
-            </div>
-            <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#777", fontWeight: 700 }}>{filtered.length} ALERTS · LAST UPDATED 2026-02-14 10:23 UTC</span>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {filtered.map((alert) => (
-              <div key={alert.id} onClick={() => setSelectedAlert(selectedAlert?.id === alert.id ? null : alert)} style={{ background: selectedAlert?.id === alert.id ? "#12131a" : "#0a0b0e", border: `1px solid ${selectedAlert?.id === alert.id ? "#c8a93240" : "#1a1c20"}`, borderRadius: 8, padding: "24px 28px", cursor: "pointer", transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)" }} onMouseEnter={(e) => { if (selectedAlert?.id !== alert.id) { e.currentTarget.style.borderColor = "#c8a93220"; e.currentTarget.style.backgroundColor = "#0f101a"; } }} onMouseLeave={(e) => { if (selectedAlert?.id !== alert.id) { e.currentTarget.style.borderColor = "#1a1c20"; e.currentTarget.style.backgroundColor = "#0a0b0e"; } }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <SeverityBadge severity={alert.severity} />
-                    <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: "#666", background: "#ffffff08", padding: "4px 12px", borderRadius: 3, fontWeight: 700, textTransform: "uppercase" }}>{alert.category}</span>
-                  </div>
-                  <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: "#666", fontWeight: 700 }}>{alert.date}</span>
-                </div>
-                <h3 style={{ fontSize: 19, fontWeight: 700, color: "#f5f3ee", marginBottom: 12, lineHeight: 1.4 }}>{alert.title}</h3>
-                <p style={{ fontSize: 16, color: "#b0ae9f", lineHeight: 1.7, fontWeight: 500 }}>{alert.summary}</p>
-
-                {selectedAlert?.id === alert.id && (
-                  <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid #1a1c20", animation: "fadeIn 0.2s ease" }}>
-                    <div style={{ display: "flex", gap: 32, marginBottom: 16 }}>
-                      <div>
-                        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#555", display: "block", marginBottom: 6, fontWeight: 700, textTransform: "uppercase" }}>SOURCE</span>
-                        <span style={{ fontSize: 13, color: "#b0ae9f", fontWeight: 500 }}>{alert.source}</span>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#555", display: "block", marginBottom: 6, fontWeight: 700, textTransform: "uppercase" }}>CORRIDOR</span>
-                        <span style={{ fontSize: 13, color: "#b0ae9f", fontWeight: 500 }}>{alert.corridor}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                      {alert.tags.map((tag) => (
-                        <span key={tag} style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", background: "#c8a93215", padding: "4px 10px", borderRadius: 3, fontWeight: 600, border: "1px solid #c8a93230" }}>{tag}</span>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: 16, padding: "16px 20px", background: "linear-gradient(135deg, #c8a93208 0%, #c8a93205 100%)", border: "1px solid #c8a93230", borderRadius: 6 }}>
-                      <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#c8a932", marginBottom: 8, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>ADVUMAN ASSESSMENT</div>
-                      <p style={{ fontSize: 14, color: "#b0ae9f", lineHeight: 1.8 }}>
-                        {alert.severity === "critical" ? "Immediate action required. Review your current operations against the new guidelines and consult with your India-side legal counsel within the next 5 business days." : alert.severity === "high" ? "High impact expected within 30-60 days. Begin contingency planning and assess exposure in your current shipment pipeline." : "Monitor closely. This development may compound with other regulatory changes. No immediate action needed but factor into quarterly planning."}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </main>
-      </div>
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+      ))}
     </div>
   );
 }
 
 function App() {
   const [view, setView] = useState("landing");
+
   return view === "landing"
-    ? <LandingPage onEnterDashboard={() => setView("dashboard")} />
-    : <Dashboard onBackToLanding={() => setView("landing")} />;
+    ? <LandingPage onEnter={()=>setView("dashboard")} />
+    : <Dashboard onBack={()=>setView("landing")} />;
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-    </script>
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
 </body>
 </html>

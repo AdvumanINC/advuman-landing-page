@@ -228,13 +228,7 @@ function DashboardNew({ onBackToLanding, userData }) {
             </div>
           ))}
 
-          <div style={{ marginTop: 'auto', padding: '20px' }}>
-            <div style={{ padding: '16px', background: '#07080a', borderRadius: 6, border: '1px solid #1a1c20' }}>
-              <div style={{ fontSize: 11, fontFamily: FONTS.mono, color: '#666', marginBottom: 8, fontWeight: 600 }}>TRIAL STATUS</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#f0ede6', fontFamily: FONTS.mono, marginBottom: 4 }}>12</div>
-              <div style={{ fontSize: 12, color: '#8a887f' }}>days remaining</div>
-            </div>
-          </div>
+          
         </aside>
 
         <main style={{ flex: 1, background: '#08090b', overflowY: 'auto' }}>

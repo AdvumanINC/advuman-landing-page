@@ -8,7 +8,7 @@ The dashboard now focuses on essential real-time data:
 #### 1. **Proprietary Indexes (Top Section)**
 - RPI (Regulatory Pressure Index)
 - LSI (Logistics Strain Index)  
-- CPI (Compliance Pressure Index)
+- CPI (Cost Pressure Index)
 - Each shows current value, change indicator, and sparkline chart
 - Updates in real-time from `corridor_indexes` table
 

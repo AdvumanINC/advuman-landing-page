@@ -5,6 +5,7 @@ import { supabase } from './supabaseClient';
 export const useAlerts = (limit = null) => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadAlerts();
@@ -20,25 +21,35 @@ export const useAlerts = (limit = null) => {
   }, [limit]);
 
   const loadAlerts = async () => {
-    let query = supabase
-      .from('alerts')
-      .select('*')
-      .order('date', { ascending: false });
-    
-    if (limit) query = query.limit(limit);
-    
-    const { data } = await query;
-    if (data) setAlerts(data);
-    setLoading(false);
+    try {
+      let query = supabase
+        .from('alerts')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (limit) query = query.limit(limit);
+      
+      const { data, error: err } = await query;
+      if (err) throw err;
+      if (data) setAlerts(data);
+      setError(null);
+    } catch (err) {
+      setError(err?.message || 'Failed to load alerts');
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { alerts, loading };
+  return { alerts, loading, error };
 };
+
 
 // Hook to fetch signals from database
 export const useSignals = (limit = null) => {
   const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadSignals();
@@ -54,25 +65,34 @@ export const useSignals = (limit = null) => {
   }, [limit]);
 
   const loadSignals = async () => {
-    let query = supabase
-      .from('signals')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (limit) query = query.limit(limit);
-    
-    const { data } = await query;
-    if (data) setSignals(data);
-    setLoading(false);
+    try {
+      let query = supabase
+        .from('signals')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (limit) query = query.limit(limit);
+      
+      const { data, error: err } = await query;
+      if (err) throw err;
+      if (data) setSignals(data);
+      setError(null);
+    } catch (err) {
+      setError(err?.message || 'Failed to load signals');
+      setSignals([]);
+    } finally {
+      setLoading(false);
+    }
   };
-//
-  return { signals, loading };
+
+  return { signals, loading, error };
 };
 
 // Hook to fetch sectors from database
 export const useSectors = (corridorId = null) => {
   const [sectors, setSectors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadSectors();
@@ -83,30 +103,39 @@ export const useSectors = (corridorId = null) => {
         loadSectors();
       })
       .subscribe();
-
     return () => supabase.removeChannel(channel);
   }, [corridorId]);
 
   const loadSectors = async () => {
-    let query = supabase
-      .from('sectors')
-      .select('*')
-      .order('alert_count', { ascending: false });
-    
-    if (corridorId) query = query.eq('corridor_id', corridorId);
-    
-    const { data } = await query;
-    if (data) setSectors(data);
-    setLoading(false);
+    try {
+      let query = supabase
+        .from('sectors')
+        .select('*')
+        .order('alert_count', { ascending: false });
+      
+      if (corridorId) query = query.eq('corridor_id', corridorId);
+      
+      const { data, error: err } = await query;
+      if (err) throw err;
+      if (data) setSectors(data);
+      setError(null);
+    } catch (err) {
+      setError(err?.message || 'Failed to load sectors');
+      setSectors([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { sectors, loading };
+  return { sectors, loading, error };
 };
+
 
 // Hook to fetch index data from database
 export const useIndexData = (corridorId = null) => {
   const [indexData, setIndexData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadIndexData();
@@ -122,71 +151,78 @@ export const useIndexData = (corridorId = null) => {
   }, [corridorId]);
 
   const loadIndexData = async () => {
-    let query = supabase
-      .from('corridor_indexes')
-      .select('*')
-      .order('snapshot_date', { ascending: true });
-    
-    if (corridorId) query = query.eq('corridor_id', corridorId);
-    
-    const { data } = await query;
-    
-    if (data) {
-      // Group by index type and get latest values + history
-      const grouped = {
-        rpi: { 
-          name: 'Regulatory Pressure Index', 
-          abbrev: 'RPI', 
-          description: 'Measures regulatory burden and policy volatility affecting cross-border trade',
-          value: 0, 
-          change: 0, 
-          history: [] 
-        },
-        lsi: { 
-          name: 'Logistics Strain Index', 
-          abbrev: 'LSI', 
-          description: 'Tracks shipping costs, port congestion, and supply chain disruption risk',
-          value: 0, 
-          change: 0, 
-          history: [] 
-        },
-        cpi: { 
-          name: 'Compliance Pressure Index', 
-          abbrev: 'CPI', 
-          description: 'Quantifies standards, certification, and documentation requirements',
-          value: 0, 
-          change: 0, 
-          history: [] 
-        }
-      };
+    try {
+      let query = supabase
+        .from('corridor_indexes')
+        .select('*')
+        .order('snapshot_date', { ascending: true });
+      
+      if (corridorId) query = query.eq('corridor_id', corridorId);
+      
+      const { data, error: err } = await query;
+      if (err) throw err;
+      
+      if (data) {
+        // Group by index type and get latest values + history
+        const grouped = {
+          rpi: { 
+            name: 'Regulatory Pressure Index', 
+            abbrev: 'RPI', 
+            description: 'Measures regulatory burden and policy volatility affecting cross-border trade',
+            value: 0, 
+            change: 0, 
+            history: [] 
+          },
+          lsi: { 
+            name: 'Logistics Strain Index', 
+            abbrev: 'LSI', 
+            description: 'Tracks shipping costs, port congestion, and supply chain disruption risk',
+            value: 0, 
+            change: 0, 
+            history: [] 
+          },
+          cpi: { 
+            name: 'Cost Pressure Index', 
+            abbrev: 'CPI', 
+            description: 'Quantifies standards, certification, and documentation requirements',
+            value: 0, 
+            change: 0, 
+            history: [] 
+          }
+        };
 
-      data.forEach(item => {
-        const key = item.index_type.toLowerCase();
-        if (grouped[key]) {
-          grouped[key].history.push(parseFloat(item.value));
-          // Get latest value
-          grouped[key].value = parseFloat(item.value);
-          grouped[key].change = parseFloat(item.change_value || 0);
-        }
-      });
+        data.forEach(item => {
+          const key = item.index_type.toLowerCase();
+          if (grouped[key]) {
+            grouped[key].history.push(parseFloat(item.value));
+            grouped[key].value = parseFloat(item.value);
+            grouped[key].change = parseFloat(item.change_value || 0);
+          }
+        });
 
-      // Keep only last 12 data points for charts
-      Object.keys(grouped).forEach(key => {
-        grouped[key].history = grouped[key].history.slice(-12);
-      });
+        Object.keys(grouped).forEach(key => {
+          grouped[key].history = grouped[key].history.slice(-12);
+        });
 
-      setIndexData(grouped);
+        setIndexData(grouped);
+        setError(null);
+      }
+    } catch (err) {
+      setError(err?.message || 'Failed to load index data');
+      setIndexData({});
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  return { indexData, loading };
+  return { indexData, loading, error };
 };
 
 // Hook to fetch corridors
 export const useCorridors = () => {
   const [corridors, setCorridors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadCorridors();
@@ -202,15 +238,23 @@ export const useCorridors = () => {
   }, []);
 
   const loadCorridors = async () => {
-    const { data } = await supabase
-      .from('corridors')
-      .select('*')
-      .eq('is_active', true)
-      .order('name');
-    
-    if (data) setCorridors(data);
-    setLoading(false);
+    try {
+      const { data, error: err } = await supabase
+        .from('corridors')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (err) throw err;
+      if (data) setCorridors(data);
+      setError(null);
+    } catch (err) {
+      setError(err?.message || 'Failed to load corridors');
+      setCorridors([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { corridors, loading };
+  return { corridors, loading, error };
 };

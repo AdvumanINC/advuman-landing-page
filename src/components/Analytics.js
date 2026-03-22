@@ -1,13 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../supabaseClient';
 import { COLORS, FONTS } from '../constants';
-
-// 🔑 Replace with your values
-const supabase = createClient(
-  "https://YOUR_PROJECT_ID.supabase.co",
-  "YOUR_ANON_KEY"
-);
 
 function Analytics() {
   const [disruptionData, setDisruptionData] = useState([]);

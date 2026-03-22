@@ -3,7 +3,6 @@ import { supabase } from './supabaseClient';
 import LandingPage from './components/LandingPage';
 import DashboardNew from './components/DashboardNew';
 import DemoView from './components/DemoView';
-import DBTest from './components/DBTest';
 
 function App() {
   const [view, setView] = useState("landing");
@@ -30,28 +29,32 @@ function App() {
   }, []);
 
   const loadUserProfile = async (userId) => {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-    
-    if (data) {
-      setUserData(data);
-      setView('dashboard');
-    } else {
-      // If no profile exists, get user data from auth
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const fallbackData = {
-          user_id: user.id,
-          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-          company_name: user.user_metadata?.company_name || 'Company',
-          email: user.email
-        };
-        setUserData(fallbackData);
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+      
+      if (data) {
+        setUserData(data);
         setView('dashboard');
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const fallbackData = {
+            user_id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            company_name: user.user_metadata?.company_name || 'Company',
+            email: user.email
+          };
+          setUserData(fallbackData);
+          setView('dashboard');
+        }
       }
+    } catch (error) {
       console.error('Error loading profile:', error);
     }
   };
@@ -74,23 +77,8 @@ function App() {
     return <DemoView onBack={handleBackToLanding} />;
   }
   
-  // Temporary DB test route - remove after testing
-  if (view === 'dbtest') {
-    return (
-      <div>
-        <button 
-          onClick={handleBackToLanding}
-          style={{ position: 'absolute', top: 20, right: 20, padding: '10px 20px', cursor: 'pointer', background: '#c8a932', border: 'none', borderRadius: 6, color: '#07080a', fontWeight: 700 }}
-        >
-          Back to Landing
-        </button>
-        <DBTest />
-      </div>
-    );
-  }
-  
   return view === "landing"
-    ? <LandingPage onShowDemo={handleShowDemo} onTestDB={() => setView('dbtest')} />
+    ? <LandingPage onShowDemo={handleShowDemo} />
     : <DashboardNew onBackToLanding={handleLogout} userData={userData} />;
 }
 

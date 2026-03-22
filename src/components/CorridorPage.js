@@ -104,7 +104,7 @@ function CorridorPage({ corridorId, onBack }) {
               {[
                 { label: 'Regulatory Pressure Index', key: 'rpi', data: rpiHistory, color: '#ff6b6b' },
                 { label: 'Logistics Strain Index', key: 'lsi', data: lsiHistory, color: '#ffb347' },
-                { label: 'Compliance Pressure Index', key: 'cpi', data: cpiHistory, color: COLORS.primary }
+                { label: 'Cost Pressure Index', key: 'cpi', data: cpiHistory, color: COLORS.primary }
               ].map(chart => (
                 <div key={chart.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>

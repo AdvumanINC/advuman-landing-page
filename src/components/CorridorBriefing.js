@@ -131,7 +131,7 @@ function CorridorBriefing({ corridorId }) {
         {[
           { label: 'RPI', value: briefing.rpi_value, history: rpiHistory, desc: 'Regulatory Pressure' },
           { label: 'LSI', value: briefing.lsi_value, history: lsiHistory, desc: 'Logistics Strain' },
-          { label: 'CPI', value: briefing.cpi_value, history: cpiHistory, desc: 'Compliance Pressure' }
+          { label: 'CPI', value: briefing.cpi_value, history: cpiHistory, desc: 'Cost Pressure' }
         ].map(index => (
           <div key={index.label} style={{ 
             background: '#0a0b0e', 
