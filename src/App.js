@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 import LandingPage from './components/LandingPage';
 import DashboardNew from './components/DashboardNew';
 import DemoView from './components/DemoView';
+import MasterDashboard, { ADMIN_EMAILS } from './components/MasterDashboard';
 
 function App() {
   const [view, setView] = useState("landing");
@@ -30,29 +31,36 @@ function App() {
 
   const loadUserProfile = async (userId) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Master admin gate
+      if (ADMIN_EMAILS.includes(user.email)) {
+        setUserData({ email: user.email, isMasterAdmin: true });
+        setView('master');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
       
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+      if (error && error.code !== 'PGRST116') throw error;
       
       if (data) {
         setUserData(data);
         setView('dashboard');
       } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const fallbackData = {
-            user_id: user.id,
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-            company_name: user.user_metadata?.company_name || 'Company',
-            email: user.email
-          };
-          setUserData(fallbackData);
-          setView('dashboard');
-        }
+        const fallbackData = {
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          company_name: user.user_metadata?.company_name || 'Company',
+          email: user.email
+        };
+        setUserData(fallbackData);
+        setView('dashboard');
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -73,9 +81,8 @@ function App() {
     setUserData(null);
   };
   
-  if (view === 'demo') {
-    return <DemoView onBack={handleBackToLanding} />;
-  }
+  if (view === 'demo') return <DemoView onBack={handleBackToLanding} />;
+  if (view === 'master') return <MasterDashboard adminEmail={userData?.email} onLogout={handleLogout} />;
   
   return view === "landing"
     ? <LandingPage onShowDemo={handleShowDemo} />

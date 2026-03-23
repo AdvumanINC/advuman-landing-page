@@ -62,8 +62,8 @@ function Settings({ userData }) {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+    if (passwordData.newPassword.length < 12) {
+      setMessage({ type: 'error', text: 'Password must be at least 12 characters' });
       setLoading(false);
       return;
     }
@@ -84,17 +84,15 @@ function Settings({ userData }) {
     }
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteInput, setDeleteInput] = useState('');
+
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (!deleteConfirm) { setDeleteConfirm(true); return; }
+    if (deleteInput !== 'DELETE') {
+      setMessage({ type: 'error', text: 'Type DELETE to confirm' });
       return;
     }
-
-    const confirmText = window.prompt('Type "DELETE" to confirm account deletion:');
-    if (confirmText !== 'DELETE') {
-      setMessage({ type: 'error', text: 'Account deletion cancelled' });
-      return;
-    }
-
     setLoading(true);
     try {
       // Delete user profile first
@@ -385,44 +383,27 @@ function Settings({ userData }) {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 15, color: '#f0ede6', fontWeight: 600, marginBottom: 4 }}>
-                Delete Account
-              </div>
-              <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6 }}>
-                Permanently delete your account and all associated data. This action cannot be undone.
-              </p>
+              <div style={{ fontSize: 15, color: '#f0ede6', fontWeight: 600, marginBottom: 4 }}>Delete Account</div>
+              <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6 }}>Permanently delete your account and all associated data. This action cannot be undone.</p>
             </div>
-            <button
-              onClick={handleDeleteAccount}
-              disabled={loading}
-              style={{
-                padding: '10px 24px',
-                background: 'transparent',
-                color: '#ff3b30',
-                border: '1px solid rgba(255, 59, 48, 0.5)',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
-                marginLeft: 24
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  e.target.style.background = 'rgba(255, 59, 48, 0.1)';
-                  e.target.style.borderColor = '#ff3b30';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) {
-                  e.target.style.background = 'transparent';
-                  e.target.style.borderColor = 'rgba(255, 59, 48, 0.5)';
-                }
-              }}
-            >
-              Delete Account
-            </button>
+            {!deleteConfirm ? (
+              <button onClick={handleDeleteAccount} disabled={loading} style={{ padding: '10px 24px', background: 'transparent', color: '#ff3b30', border: '1px solid rgba(255, 59, 48, 0.5)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', marginLeft: 24 }}>
+                Delete Account
+              </button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 24 }}>
+                <input
+                  value={deleteInput}
+                  onChange={e => setDeleteInput(e.target.value)}
+                  placeholder='Type DELETE to confirm'
+                  style={{ padding: '8px 12px', background: '#07080a', border: '1px solid rgba(255,59,48,0.5)', borderRadius: 6, color: '#ff3b30', fontSize: 13, outline: 'none' }}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={handleDeleteAccount} disabled={loading} style={{ padding: '8px 16px', background: 'rgba(255,59,48,0.15)', color: '#ff3b30', border: '1px solid rgba(255,59,48,0.5)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Confirm</button>
+                  <button onClick={() => { setDeleteConfirm(false); setDeleteInput(''); }} style={{ padding: '8px 16px', background: 'transparent', color: '#8a887f', border: '1px solid #2a2c34', borderRadius: 6, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
