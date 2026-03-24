@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from './supabaseClient';
 
-function useSupabaseQuery(table, { orderBy, ascending = false, limit, filter, channel } = {}) {
+function useSupabaseQuery(table, { orderBy, ascending = false, limit, filterCol, filterVal, channel } = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,7 +10,7 @@ function useSupabaseQuery(table, { orderBy, ascending = false, limit, filter, ch
     try {
       let q = supabase.from(table).select('*').order(orderBy, { ascending });
       if (limit) q = q.limit(limit);
-      if (filter) q = q.eq(filter.col, filter.val);
+      if (filterCol && filterVal) q = q.eq(filterCol, filterVal);
       const { data: rows, error: err } = await q;
       if (err) throw err;
       setData(rows || []);
@@ -21,7 +21,7 @@ function useSupabaseQuery(table, { orderBy, ascending = false, limit, filter, ch
     } finally {
       setLoading(false);
     }
-  }, [table, orderBy, ascending, limit, filter]);
+  }, [table, orderBy, ascending, limit, filterCol, filterVal]); // primitives only — no object ref
 
   useEffect(() => {
     fetch();
@@ -48,7 +48,8 @@ export const useSignals = (limit = null) => {
 export const useSectors = (corridorId = null) => {
   const { data, loading, error } = useSupabaseQuery('sectors', {
     orderBy: 'alert_count',
-    filter: corridorId ? { col: 'corridor_id', val: corridorId } : null,
+    filterCol: corridorId ? 'corridor_id' : null,
+    filterVal: corridorId || null,
   });
   return { sectors: data, loading, error };
 };
