@@ -31,15 +31,18 @@ function SignupModal({ onClose }) {
       if (authError) throw authError;
 
       if (authData.user) {
-        const { error: profileError } = await supabase.from('user_profiles').insert([{
+        await supabase.from('user_profiles').insert([{
           user_id: authData.user.id,
-          company_name: formData.companyName,
+          email: formData.email,
           full_name: formData.fullName,
+          company_name: formData.companyName,
+          trade_corridor: 'UK-India',
+          category: 'General',
+          shipping_frequency: 'monthly',
+          subscription_status: 'trial',
           trial_start_date: new Date().toISOString(),
           trial_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
         }]);
-
-        if (profileError) console.error('Profile creation error:', profileError);
         onClose();
       }
     } catch (err) {

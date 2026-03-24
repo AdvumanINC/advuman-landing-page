@@ -23,11 +23,13 @@ CREATE TABLE IF NOT EXISTS master_admins (
 );
 
 -- Replace these with your real 3 emails
-INSERT INTO master_admins (email) VALUES
+INSERT INTO master_admins (email)
+SELECT v.email FROM (VALUES
   ('admin1@yourdomain.com'),
   ('admin2@yourdomain.com'),
   ('admin3@yourdomain.com')
-ON CONFLICT (email) DO NOTHING;
+) AS v(email)
+WHERE NOT EXISTS (SELECT 1 FROM master_admins WHERE email = v.email);
 
 -- Helper: is the current JWT user a master admin?
 CREATE OR REPLACE FUNCTION is_master_admin()
