@@ -1,106 +1,110 @@
 # Real-Time Data Setup - ADVUMAN
 
 ## Overview
-Your React app is already configured to display real-time data from Supabase! The system uses React hooks with Supabase's real-time subscriptions.
 
-## How It Works
+The app fetches all data from Supabase and subscribes to real-time changes via Supabase channels. When your webscraper inserts new data, the UI updates automatically — no page refresh needed.
 
-### 1. Real-Time Hooks (src/hooks.js)
-Your app has 5 custom hooks that automatically fetch and update data:
+---
 
-- **useAlerts()** - Fetches alerts from the `alerts` table
-- **useSignals()** - Fetches signals from the `signals` table  
-- **useSectors()** - Fetches sectors from the `sectors` table
-- **useIndexData()** - Fetches corridor indexes (RPI, LSI, CPI) from `corridor_indexes` table
-- **useCorridors()** - Fetches trade corridors from the `corridors` table
+## Custom Hooks (src/hooks.js)
 
-Each hook:
-- Loads data on component mount
-- Subscribes to real-time changes using Supabase channels
-- Automatically updates when data changes in the database
-- Cleans up subscriptions on unmount
+Five hooks handle all data fetching and real-time subscriptions:
 
-### 2. Components Using Real-Time Data
+### useAlerts(limit)
+```javascript
+const { alerts, loading } = useAlerts(10);
+// Fetches from `alerts` table, ordered by date desc
+```
 
-**DashboardNew.js**
-- Uses `useAlerts(4)` to show 4 recent alerts
-- Uses `useIndexData()` to display RPI, LSI, CPI indexes with sparklines
-- Updates automatically when new data arrives
+### useSignals(limit)
+```javascript
+const { signals, loading } = useSignals(5);
+// Fetches from `signals` table, ordered by created_at desc
+```
 
-**LandingPage.js**
-- Uses `useAlerts(4)` for the scrolling alert ticker
-- Uses `useIndexData()` to show the 3 proprietary indexes
-- All data updates in real-time
+### useIndexData(corridorId)
+```javascript
+const { indexData, loading } = useIndexData();
+// Fetches from `corridor_indexes`, returns { rpi: {...}, lsi: {...}, cpi: {...} }
+```
 
-### 3. Expected Database Tables
+### useSectors(corridorId)
+```javascript
+const { sectors, loading } = useSectors();
+// Fetches from `sectors` table, optional filter by corridor_id
+```
 
-Your Supabase database should have these tables:
+### useCorridors()
+```javascript
+const { corridors, loading } = useCorridors();
+// Fetches active corridors from `corridors` table
+```
+
+Each hook subscribes to Postgres changes on its table and re-fetches automatically when data changes.
+
+---
+
+## Which Components Use Real-Time Data
+
+| Component | Hooks Used |
+|---|---|
+| `LandingPage.js` | `useAlerts(4)`, `useIndexData()` |
+| `DashboardNew.js` | `useAlerts(10)`, `useIndexData()`, `useSignals(5)` |
+| `Signals.js` | `useSignals()` |
+| `Analytics.js` | Direct Supabase queries to `disruptions`, `risks`, `sources` |
+| `CorridorPage.js` | `useIndexData(corridorId)`, `useSectors(corridorId)`, `useCorridors()` |
+
+---
+
+## Expected Table Schemas
 
 #### `alerts`
-- id, title, summary, severity, category, date, created_at
+`id, title, summary, severity, category, date, source, corridor_id, tags, created_at`
 
-#### `signals`  
-- id, title, description, created_at
+#### `signals`
+`id, location, category, description, confidence, impact, analyst_note, severity, hs_code, source, corridor_id, created_at`
 
 #### `corridor_indexes`
-- id, corridor_id, index_type (RPI/LSI/CPI), value, change_value, snapshot_date
-
-#### `sectors`
-- id, corridor_id, name, alert_count
+`id, corridor_id, index_type (RPI/LSI/CPI), value, change_value, snapshot_date`
 
 #### `corridors`
-- id, name, is_active
+`id, name, is_active`
 
-#### `user_profiles`
-- user_id, full_name, company_name, email
+#### `sectors`
+`id, corridor_id, name, alert_count`
 
-## Testing Your Database Connection
+#### `disruptions`
+`id, month, count`
 
-I've added a temporary "Test DB" button on the landing page:
+#### `risks`
+`id, category, count, color`
 
-1. Run `npm start`
-2. Click the green "Test DB" button
-3. You'll see which tables exist and how many rows each has
-4. This helps you verify your Supabase connection and data
+#### `sources`
+`id, source, alerts`
 
-## What Happens When Data Changes
+---
 
-When your external webscraper adds new data to Supabase:
+## How Real-Time Works
 
-1. **Instant Update**: The Supabase real-time subscription detects the change
-2. **Auto Refresh**: The React hook automatically refetches the data
-3. **UI Update**: Components re-render with the new data
-4. **No Page Reload**: Everything happens seamlessly without refreshing
+1. Webscraper inserts a row into Supabase
+2. Supabase fires a Postgres change event
+3. The relevant hook catches it and re-fetches
+4. React re-renders the component with new data
 
-## Next Steps
+All users see the update simultaneously with no page reload.
 
-1. **Test Connection**: Click "Test DB" to verify your tables exist
-2. **Add Sample Data**: Insert test data into your Supabase tables
-3. **Watch It Update**: See the dashboard update in real-time
-4. **Remove Test Button**: Once verified, remove the DBTest component and button
+---
 
-## Removing the Test Button
+## Troubleshooting
 
-After testing, remove these:
-- Delete `src/components/DBTest.js`
-- Remove DBTest import and route from `App.js`
-- Remove `onTestDB` prop from LandingPage
+**No data showing?**
+- Check `.env` has correct `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY`
+- Verify schema SQL ran without errors
+- Check browser console for Supabase errors
 
-## Environment Variables Required
+**Data not updating in real-time?**
+- Go to Supabase → Database → Replication and confirm realtime is enabled for the relevant tables
+- Check Network tab for an active WebSocket connection
 
-Make sure your `.env` file has:
-```
-REACT_APP_SUPABASE_URL=your_supabase_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-## Real-Time Features Already Working
-
-✓ Alerts update automatically
-✓ Index values (RPI, LSI, CPI) update in real-time
-✓ Sparkline charts update with new data
-✓ Alert severity badges reflect current data
-✓ No manual refresh needed
-✓ Multiple users see updates simultaneously
-
-Your app is production-ready for real-time data display!
+**Loading forever?**
+- Confirm your Supabase project is active (not paused on free tier)
