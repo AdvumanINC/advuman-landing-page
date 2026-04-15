@@ -1,0 +1,36 @@
+Uri: https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\css2
+Content Type: text/css
+
+Uri: https://fonts.gstatic.com/s/bebasneue/v16/JTUSjIg69CK48gW7PXooxW4.ttf
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\s\bebasneue\v16\JTUSjIg69CK48gW7PXooxW4.ttf
+Content Type: font/ttf
+
+Uri: https://fonts.gstatic.com/s/cormorantgaramond/v21/co3smX5slCNuHLi8bLeY9MK7whWMhyjYrGFEsdtdc62E6zd58jDOjw.ttf
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\s\cormorantgaramond\v21\co3smX5slCNuHLi8bLeY9MK7whWMhyjYrGFEsdtdc62E6zd58jDOjw.ttf
+Content Type: font/ttf
+
+Uri: https://fonts.gstatic.com/s/cormorantgaramond/v21/co3smX5slCNuHLi8bLeY9MK7whWMhyjYrGFEsdtdc62E6zd5rDDOjw.ttf
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\s\cormorantgaramond\v21\co3smX5slCNuHLi8bLeY9MK7whWMhyjYrGFEsdtdc62E6zd5rDDOjw.ttf
+Content Type: font/ttf
+
+Uri: https://fonts.gstatic.com/s/cormorantgaramond/v21/co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86GnM.ttf
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\s\cormorantgaramond\v21\co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86GnM.ttf
+Content Type: font/ttf
+
+Uri: https://fonts.gstatic.com/s/dmmono/v16/aFTR7PB1QTsUX8KYvumzIYQ.ttf
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\s\dmmono\v16\aFTR7PB1QTsUX8KYvumzIYQ.ttf
+Content Type: font/ttf
+
+Uri: https://fonts.gstatic.com/s/dmmono/v16/aFTU7PB1QTsUX8KYhh0.ttf
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\s\dmmono\v16\aFTU7PB1QTsUX8KYhh0.ttf
+Content Type: font/ttf
+
+Uri: https://umami-orange.up.railway.app/script.js
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\script.js
+Content Type: application/javascript
+
+Uri: https://whentobuybtc.xyz/app.html
+File Name: C:\Downloaded Web Sites\whentobuybtc.xyz\app.html
+Content Type: text/html
+

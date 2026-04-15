@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Brand Colors ─────────────────────────────── */
+  --color-bg:         #070d0a;
+  --color-surface:    rgba(255, 255, 255, 0.03);
+  --color-border:     rgba(255, 255, 255, 0.06);
+  --color-text:       #e8e4dc;
+  --color-heading:    #f5f0e8;
+  --color-gold:       #ffd700;
+  --color-gold-dim:   #e0be00;
+  --color-gold-muted: rgba(255, 215, 0, 0.35);
+  --color-red:        #ff3b3b;
+  --color-teal:       #00c896;
+  --color-blue:       #4488ff;
+  --color-muted:      rgba(255, 255, 255, 0.35);
+
+  /* ── Typography ───────────────────────────────── */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-label:   'Bebas Neue', 'Arial Narrow', sans-serif;
+  --font-mono:    'DM Mono', 'Courier New', monospace;
+  --font-body:    'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  /* ── Spacing ──────────────────────────────────── */
+  --spacing-section: 6rem;
+}
+
+/* ── Base Reset ─────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: auto; /* GSAP handles smooth scroll */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #070d0a;
+  color: #e8e4dc;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ── Selection ──────────────────────────────────── */
+::selection {
+  background: rgba(255, 215, 0, 0.25);
+  color: #f5f0e8;
+}
+
+/* ── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #070d0a; }
+::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 2px; }
+
+/* ── Typography Utilities ───────────────────────── */
+.font-display  { font-family: 'Cormorant Garamond', Georgia, serif; }
+.font-label    { font-family: 'Bebas Neue', 'Arial Narrow', sans-serif; }
+.font-mono     { font-family: 'DM Mono', 'Courier New', monospace; }
+.font-body     { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; }
+
+/* ── Ornament Divider ───────────────────────────── */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2.5rem 2rem;
+  opacity: 0.15;
+}
+.ornament::before,
+.ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: white;
+}
+
+/* ── Section Label ──────────────────────────────── */
+.section-label {
+  font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: rgba(255, 215, 0, 0.65);
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Section Title ──────────────────────────────── */
+.section-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.1;
+  color: #f5f0e8;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Btn Styles ─────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: #ffd700;
+  color: #1e1800;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.18s ease;
+  white-space: nowrap;
+}
+.btn-primary:hover { background: #e0be00; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: transparent;
+  color: #e8e4dc;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+}
+.btn-ghost:hover {
+  border-color: rgba(255, 215, 0, 0.45);
+  color: #ffd700;
+}
+
+/* ── Grid gap-as-border ─────────────────────────── */
+.grid-ruled {
+  display: grid;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.grid-ruled > * {
+  background: #070d0a;
+}
+
+/* ── Glassmorphism surface ──────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Status badges ──────────────────────────────── */
+.badge-active  { color: #ff3b3b; border-color: rgba(255, 59, 59, 0.3); }
+.badge-watch   { color: #ffd700; border-color: rgba(255, 215, 0, 0.3); }
+.badge-stable  { color: #00c896; border-color: rgba(0, 200, 150, 0.3); }
+.badge-recovery{ color: #4488ff; border-color: rgba(68, 136, 255, 0.3); }
