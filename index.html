@@ -814,6 +814,25 @@
       display: block;
       z-index: 1;
     }
+    /* Sequence loading overlay */
+    .seq-loading {
+      position: absolute; inset: 0; z-index: 50; pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #070d0a; transition: opacity 0.4s ease;
+    }
+    .seq-loading-label {
+      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-size: 0.7rem; letter-spacing: 0.2em;
+      color: rgba(255,215,0,0.5); margin-bottom: 0.85rem;
+    }
+    .seq-loading-bar {
+      width: 10rem; height: 1px; border-radius: 1px; overflow: hidden;
+      background: rgba(255,255,255,0.1);
+    }
+    .seq-loading-fill {
+      height: 100%; background: #ffd700; width: 0%;
+      transition: width 0.15s linear;
+    }
     /* Top/bottom legibility gradient */
     .scroll-scrim-tb {
       position: absolute; inset: 0; z-index: 2; pointer-events: none;
@@ -1690,10 +1709,10 @@ async function submitWaitlist(e) {
   }
 }
 
-// ── SCROLL-PINNED PNG SEQUENCE DRIVER ──────────────────────────────────────
-// One tiny driver for all <section class="scroll-pin" data-seq data-frames> sections.
-// Preloads frames, draws the one matching scroll progress, and ramps [data-reveal]
-// children in/out as progress crosses their configured windows.
+// ── SCROLL-PINNED SEQUENCE DRIVER ──────────────────────────────────────────
+// Primary: scrubs an MP4 <video> by scroll progress — 1 HTTP request,
+// hardware-decoded, 15–30× smaller than equivalent PNG frames.
+// Automatic fallback to PNG sequence if the MP4 is not yet deployed.
 (function() {
   const sections = Array.from(document.querySelectorAll('section.scroll-pin'));
   if (!sections.length) return;
@@ -1702,13 +1721,10 @@ async function submitWaitlist(e) {
   const reveals = [];
 
   sections.forEach(section => {
-    const seq    = section.dataset.seq;
-    const total  = parseInt(section.dataset.frames, 10);
+    const seq   = section.dataset.seq;
+    const total = parseInt(section.dataset.frames, 10);
     const canvas = section.querySelector('canvas.scroll-canvas');
     const ctx    = canvas.getContext('2d', { alpha: false });
-
-    // Stable mutable frame buffer — same array reference, filled in as images arrive
-    const frames = new Array(total);
 
     function resize() {
       const r = canvas.getBoundingClientRect();
@@ -1716,41 +1732,125 @@ async function submitWaitlist(e) {
       canvas.height = Math.max(1, r.height * DPR);
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     }
-    function draw(progress) {
-      const idx = Math.min(total - 1, Math.max(0, Math.floor(progress * (total - 1))));
-      const img = frames[idx];
+
+    // Unified cover-fit draw — works for both HTMLVideoElement and HTMLImageElement
+    function drawSource(src) {
       const cw = canvas.width / DPR, ch = canvas.height / DPR;
       ctx.fillStyle = '#070d0a';
       ctx.fillRect(0, 0, cw, ch);
-      if (!img) return;
-      // object-fit: cover
-      const scale = Math.max(cw / img.width, ch / img.height);
-      const w = img.width * scale, h = img.height * scale;
-      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+      if (!src) return;
+      const sw = src.videoWidth  || src.naturalWidth  || 0;
+      const sh = src.videoHeight || src.naturalHeight || 0;
+      if (!sw || !sh) return;
+      const scale = Math.max(cw / sw, ch / sh);
+      ctx.drawImage(src, (cw - sw * scale) / 2, (ch - sh * scale) / 2, sw * scale, sh * scale);
     }
 
     section._resize = resize;
-    section._draw   = draw;
+    section._draw   = null;
     resize();
 
-    // Frame loader — called immediately for the hero, deferred for other sections
+    // ── Loading overlay ──────────────────────────────────────────────────
+    const overlay = document.createElement('div');
+    overlay.className = 'seq-loading';
+    overlay.innerHTML =
+      '<span class="seq-loading-label">LOADING</span>' +
+      '<div class="seq-loading-bar"><div class="seq-loading-fill"></div></div>';
+    section.querySelector('.scroll-pin-inner').appendChild(overlay);
+    const fill = overlay.querySelector('.seq-loading-fill');
+
+    function setProgress(p) {
+      fill.style.width = Math.round(Math.min(1, p) * 100) + '%';
+      if (p >= 1) {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 400);
+      }
+    }
+
+    // ── Video scrubbing ──────────────────────────────────────────────────
     section._loadFrames = function() {
+      const video = document.createElement('video');
+      video.muted       = true;
+      video.playsInline = true;
+      video.preload     = 'auto';
+      video.setAttribute('playsinline', '');
+
+      // Seek-queue: never pile up seeks during fast scroll.
+      // Stores the latest requested time and flushes one seek at a time.
+      let pendingTime = null, isSeeking = false;
+      function seekTo(t) {
+        pendingTime = t;
+        if (!isSeeking) flushSeek();
+      }
+      function flushSeek() {
+        if (pendingTime === null) return;
+        isSeeking = true;
+        video.currentTime = pendingTime;
+        pendingTime = null;
+      }
+
+      video.addEventListener('seeked', () => {
+        drawSource(video);
+        isSeeking = false;
+        flushSeek(); // Drain the queue
+      });
+
+      video.addEventListener('loadedmetadata', () => {
+        video.currentTime = 0; // Decode frame 0 as soon as duration is known
+      });
+
+      video.addEventListener('loadeddata', () => {
+        drawSource(video);
+        setProgress(1); // First frame rendered — hide overlay
+      });
+
+      // Show real download progress via buffered ranges
+      video.addEventListener('progress', () => {
+        if (video.buffered.length && video.duration) {
+          const p = video.buffered.end(video.buffered.length - 1) / video.duration;
+          setProgress(p * 0.95); // Reserve last 5% for loadeddata
+        }
+      });
+
+      section._draw = function(progress) {
+        if (!video.duration || !isFinite(video.duration) || video.readyState < 1) return;
+        const t = progress * video.duration;
+        if (Math.abs(video.currentTime - t) > 0.001) seekTo(t);
+      };
+
+      // MP4 missing (not yet deployed) → fall back to original PNG behaviour
+      video.addEventListener('error', fallbackToPNGs, { once: true });
+
+      video.src = `/sequence${seq}.mp4`;
+      video.load();
+    };
+
+    // ── PNG fallback — identical to the original driver, active until MP4 ─
+    function fallbackToPNGs() {
+      const frames = new Array(total);
+      let loaded = 0;
+
+      section._draw = function(progress) {
+        const idx = Math.min(total - 1, Math.max(0, Math.floor(progress * (total - 1))));
+        drawSource(frames[idx]);
+      };
+
       for (let i = 0; i < total; i++) {
         const img = new Image();
         const n = String(i + 1).padStart(3, '0');
-        // Boost network priority for the first 20 frames so the canvas shows fast
         if (i < 20) img.fetchPriority = 'high';
         img.src = `/sequence${seq}/ezgif-frame-${n}.png`;
         img.onload = () => {
           frames[i] = img;
-          // Redraw as soon as frame 0 arrives — canvas is never blank
-          if (i === 0) update();
+          loaded++;
+          setProgress(loaded / total);
+          if (i === 0) update(); // Show first frame immediately
         };
-        img.onerror = () => {};
+        img.onerror = () => { loaded++; setProgress(loaded / total); };
       }
-    };
+    }
 
-    // Collect reveals inside this section
+    // Collect data-reveal elements inside this section
     section.querySelectorAll('[data-reveal]').forEach(el => {
       const [rs, re] = el.dataset.reveal.split(',').map(parseFloat);
       const hideAttr = el.dataset.hide;
@@ -1760,10 +1860,7 @@ async function submitWaitlist(e) {
     });
   });
 
-  // ── Lazy-load frames: hero eagerly, others only when scrolled near ──────────
-  // Cuts the initial network burst from 320 → 160 simultaneous PNG requests.
-  // The 1500px rootMargin gives the deferred sequence time to load before the
-  // user reaches it while scrolling through the pinned hero (300vh tall).
+  // ── Lazy-load: hero immediately, others deferred until near viewport ───────
   const seqObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -1775,9 +1872,9 @@ async function submitWaitlist(e) {
 
   sections.forEach((section, i) => {
     if (i === 0) {
-      section._loadFrames();        // Hero — load immediately (above the fold)
+      section._loadFrames();           // Hero — load immediately (above the fold)
     } else {
-      seqObserver.observe(section); // Others — load when approaching viewport
+      seqObserver.observe(section);    // Others — deferred
     }
   });
 
@@ -1812,6 +1909,13 @@ async function submitWaitlist(e) {
   });
   update();
 })();
+
+// ── SERVICE WORKER — caches sequence videos for instant repeat visits ────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 
 
 </script>
