@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Anton", "Oswald", "Impact", sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  background-color: #FFD200;
+  color: #ffffff;
+  font-family: var(--font-body);
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar but keep scrollability */
+body::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: #FFD200;
+  color: #ffffff;
+}
+
+.app-bg {
+  background: radial-gradient(circle at center, #1a1a1a 0%, #090909 70%);
+}
+
+.nav-link {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 4px;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 200ms ease, left 200ms ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+.nav-link.is-active::after {
+  width: 100%;
+  left: 0;
+  background: #FFD200;
+}
+
+@keyframes loaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-ring {
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(255, 85, 0, 0.15);
+  border-top-color: #FFD200;
+  border-radius: 50%;
+  animation: loaderSpin 1s linear infinite;
+}
